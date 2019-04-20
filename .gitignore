@@ -2,7 +2,7 @@ results/*
 models/*
 hw2_train_val/*
 Test_hbb/*
-
+constant.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -43,7 +43,7 @@ if os.path.isdir(model_path) != True:
 
 stages = dict([(10, 0.0015), (20, 0.001), (30, 0.0005), (40, 0.0001), (50, 0.00001)])
 train_num = TRAIN_DATA_SIZE
-test_num = 1500
+test_num = VALI_DATA_SIZE
 img_size = 448
 num_epochs = EPOCH_NUM
 lambda_coord = 5
@@ -52,23 +52,27 @@ n_batch = 24
 S = 7
 B = 2
 C = 16
-        
+
+
+
 def save_model_by_epoch(epoch, model):
     if epoch in stages.keys():
         print("Stage {} model saved".format(epoch))
         model_name = 'stage_{}_model.pth'.format(epoch)
-        save_torch_model(model, model_name)
+        save_torch_model(model, model_name, epoch)
 
-def save_torch_model(model, model_name):
+def save_torch_model(model, model_name, epoch):
     path = os.path.join(model_path, model_name)
     torch.save(model.state_dict(), path)
-    
     ## ==========================================
     #   mAP whenever model is saved
     ## ==========================================
-    execution(validate_folder, './Test_hbb', path)
+    map1 = execution(validate_folder, './Test_hbb', path)
     
-    return path
+    with open(os.path.join(results_folder, 'event_log'), 'a+') as f:
+        event_str = 'Model saved at epoch: {}, with mAP: {} \n'.format(epoch, map1)
+        f.write(event_str)
+    print(event_str)
 
 def main():
     best_test_loss = np.inf
@@ -113,8 +117,6 @@ def main():
     model.train()
     
     train_val_loss_log = open(os.path.join(results_folder, 'train_val_loss_log'), 'w+')
-    event_log = open(os.path.join(results_folder, 'event_log'), 'w+')
-    
     #loss_fn = YoloLoss(B, S, lambda_coord, lambda_noobj)
     loss_fn = YoloLossNew(B, S, C, lambda_coord, lambda_noobj)
     
@@ -170,11 +172,7 @@ def main():
         train_val_loss_log.flush()
         if best_test_loss > validation_loss:
             best_test_loss = validation_loss
-            best_model_path = save_torch_model(model, 'best.pth')
-            event_str = 'epoch: {}, update best model \n'.format(epoch)
-            print(event_str)
-            event_log.writelines(event_str)
-            event_log.flush()
+            save_torch_model(model, 'best.pth', epoch)
 
     train_val_loss_log.close()
     event_log.close()

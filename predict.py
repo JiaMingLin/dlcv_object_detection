@@ -187,7 +187,9 @@ def execution(train_folder, output_folder, model_path):
     
     import hw2_evaluation_task2
     
-    hw2_evaluation_task2.main()
+    map1 = hw2_evaluation_task2.main()
     
+    return map1
+
 if __name__ == '__main__':
     main()

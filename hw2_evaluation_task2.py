@@ -286,7 +286,7 @@ def main():
     #classnames = [x for x in classnames if x not in del_list]
 
     classaps = []
-    map = 0
+    map1 = 0
     for classname in classnames:
         print('classname:', classname)
         rec, prec, ap = voc_eval(det[classname],
@@ -295,7 +295,7 @@ def main():
              classname,
              ovthresh=0.5,
              use_07_metric=True)
-        map = map + ap
+        map1 = map1 + ap
         #print('rec: ', rec, 'prec: ', prec, 'ap: ', ap)
         print('ap: ', ap)
         classaps.append(ap)
@@ -306,8 +306,9 @@ def main():
         # plt.ylabel('precision')
         # plt.plot(rec, prec)
         # plt.show()
-    map = map/len(classnames)
-    print('map:', map)
+    map1 = map1/len(classnames)
+    print('map:', map1)
+    return map1
     #classaps = 100*np.array(classaps)
     #print('classaps: ', classaps)
 if __name__ == '__main__':
