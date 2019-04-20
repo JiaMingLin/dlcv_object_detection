@@ -90,9 +90,10 @@ class DataGenerator(data.Dataset):
         
         """
         name = self.image_names[index]   # str
-        img = self.imgs[index]           
-        #if img.mode != 'RGB':
-        #    img = img.convert('RGB')
+        img = self.imgs[index]
+        
+        img = adaptiveHE(img)
+        img = sharpening(img)
         
         # boxes and labels
         raw_target = self.targets[index].clone()  # [xmin, ymin, xmax, ymax, cls_num]
@@ -102,25 +103,27 @@ class DataGenerator(data.Dataset):
         except:
             boxes = torch.zeros(1, 4)
             labels = torch.zeros(1)
-        
-        img = BGR2RGB(img)
-        img = subMean(img,self.mean) 
+
+        img = adaptiveHE(img)        
+        #
         # data augmentation
         
         if self.train:
             img, boxes = resize(img, boxes, (TRAIN_IMAGE_SIZE, TRAIN_IMAGE_SIZE))
-            img, boxes = random_flip(img, boxes)
+            #img, boxes = random_flip(img, boxes)
             #img, boxes = randomScale(img,boxes)
-            img = randomBlur(img)
-            img = RandomBrightness(img)
-            img = RandomHue(img)
-            img = RandomSaturation(img)
+            #img = randomBlur(img)
+            #img = RandomBrightness(img)
+            #img = RandomHue(img)
+            #img = RandomSaturation(img)
         else:
             img, boxes = resize(img, boxes, (TRAIN_IMAGE_SIZE, TRAIN_IMAGE_SIZE))
             #img, boxes = center_crop(img, boxes, (TRAIN_IMAGE_SIZE, TRAIN_IMAGE_SIZE))
 
+        img = BGR2RGB(img)
+        #img = subMean(img,self.mean) 
         img = self.transform(img)
-        
+
         target = torch.zeros((GRID_NUM,GRID_NUM,26))
         cell_size = TRAIN_IMAGE_SIZE/GRID_NUM
         wh = boxes[:,2:]-boxes[:,:2]

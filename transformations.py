@@ -184,6 +184,29 @@ def BGR2HSV( img):
 def HSV2BGR( img):
     return cv2.cvtColor(img,cv2.COLOR_HSV2BGR)
 
+def adaptiveHE(image):
+    image_to_yuv = cv2.cvtColor(image,cv2.COLOR_BGR2YUV)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    image_to_yuv[:,:,0] = clahe.apply(image_to_yuv[:,:,0])
+    image_to_yuv[:,0,:] = clahe.apply(image_to_yuv[:,0,:])
+    image_to_yuv[0,:,:] = clahe.apply(image_to_yuv[0,:,:])
+    adaptiveHE1 = cv2.cvtColor(image_to_yuv, cv2.COLOR_YUV2BGR)
+    return adaptiveHE1
+
+def sharpening(image):
+    image_to_yuv = cv2.cvtColor(image,cv2.COLOR_BGR2YUV)
+    # Create our shapening kernel, it must equal to one eventually
+    kernel_sharpening = np.array([[-1,-1,-1], 
+                                  [-1, 9,-1],
+                                  [-1,-1,-1]])
+    # applying the sharpening kernel to the input image & displaying it.
+    image_to_yuv[0,:,:] = cv2.filter2D(image_to_yuv[0,:,:], -1, kernel_sharpening)
+    image_to_yuv[:,0,:] = cv2.filter2D(image_to_yuv[:,0,:], -1, kernel_sharpening)
+    image_to_yuv[:,:,0] = cv2.filter2D(image_to_yuv[:,:,0], -1, kernel_sharpening)
+
+    sharpened = cv2.cvtColor(image_to_yuv, cv2.COLOR_YUV2BGR)
+    return sharpened
+
 def draw(img, boxes):
     draw = ImageDraw.Draw(img)
     for box in boxes:

@@ -80,7 +80,7 @@ def predict_all(input_path, model_path, data_size = 1500, num_workers = 2):
     data_counts = len(validation_dataset)
     for image_id in range(data_counts):
         img_name, images , target = validation_dataset.__getitem__(image_id)
-        print("Detecting objects in image: {}....".format(img_name))
+        #print("Detecting objects in image: {}....".format(img_name))
         pred_bbox_cxcy, cls_conf, max_cls_code = predict(images, model)
         pred_bbox_xy = pred_bbox_revert(pred_bbox_cxcy)
         
@@ -139,7 +139,7 @@ def format_out(number):
 def write_predictions_to_file(predicted_results, output_folder):
     pathlib.Path(output_folder).mkdir(parents=True, exist_ok=True)
     for (image_name, bbox_xy_final, cls_conf_final, cls_labels) in predicted_results:
-        print("Writing results for image: {}.....".format(image_name))
+        #print("Writing results for image: {}.....".format(image_name))
         with open('{}/{}.txt'.format(output_folder,image_name), 'w+') as f:
             for box, cls_conf, label in zip(bbox_xy_final, cls_conf_final, cls_labels):
                 # box [0 xmin, 1 ymin, 2 xmax, 3 ymax]
