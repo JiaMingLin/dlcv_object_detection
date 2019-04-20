@@ -62,6 +62,12 @@ def save_model_by_epoch(epoch, model):
 def save_torch_model(model, model_name):
     path = os.path.join(model_path, model_name)
     torch.save(model.state_dict(), path)
+    
+    ## ==========================================
+    #   mAP whenever model is saved
+    ## ==========================================
+    execution(validate_folder, './Test_hbb', path)
+    
     return path
 
 def main():
@@ -169,15 +175,7 @@ def main():
             print(event_str)
             event_log.writelines(event_str)
             event_log.flush()
-            execution(validate_folder, './Test_hbb', best_model_path)
 
-        ## =============================
-        #   Evaluate mAP
-        ## =============================
-        
-        
-        
-        
     train_val_loss_log.close()
     event_log.close()
 
