@@ -25,6 +25,7 @@ class DataGenerator(data.Dataset):
         self.image_names = []
         self.imgs = []
         self.targets = [] # xmin, ymin, xmax, ymax, class_num
+        self.mean = (123,117,104)#RGB
         
         # loading training data
         image_path = os.path.join(parent_dir, "images")
@@ -42,8 +43,8 @@ class DataGenerator(data.Dataset):
             targets_per_img = self.read_target(parent_dir, name)
             
             num_bbox = len(targets_per_img)
-            # cache name, image and boxes(num_bbox > 0) and 
-            if train is True and (num_bbox > 0) and (num_bbox <= 20 ):
+            # cache name, image and boxes(num_bbox > 0) and   and (num_bbox > 0) and (num_bbox <= 20 )
+            if train is True:
                 self.image_names.append(name)
                 self.imgs.append(img)
                 self.targets.append(targets_per_img)
@@ -68,15 +69,16 @@ class DataGenerator(data.Dataset):
         with open(path) as fin:
             for line in fin:
                 splited = line.replace('\n', '').split()
-                if splited[-1] == '0':
-                    xmin = float(splited[0])
-                    ymin = float(splited[1])
-                    xmax = float(splited[4])
-                    ymax = float(splited[5])
-                    cls_num = DOTA_CLASSES.index(splited[8])
-                    target_per_img.append([xmin, ymin, xmax, ymax, cls_num])                
+                #if splited[-1] == '0':
+                xmin = float(splited[0])
+                ymin = float(splited[1])
+                xmax = float(splited[4])
+                ymax = float(splited[5])
+                cls_num = DOTA_CLASSES.index(splited[8])
+                target_per_img.append([xmin, ymin, xmax, ymax, cls_num])                
            
         return torch.Tensor(target_per_img)
+
     
     def __getitem__(self, index):
         """
@@ -101,12 +103,18 @@ class DataGenerator(data.Dataset):
             boxes = torch.zeros(1, 4)
             labels = torch.zeros(1)
         
+        img = BGR2RGB(img)
+        img = subMean(img,self.mean) 
         # data augmentation
         
         if self.train:
-            #img, boxes = random_flip(img, boxes)
-            #img, boxes = random_crop(img, boxes)
             img, boxes = resize(img, boxes, (TRAIN_IMAGE_SIZE, TRAIN_IMAGE_SIZE))
+            img, boxes = random_flip(img, boxes)
+            #img, boxes = randomScale(img,boxes)
+            img = randomBlur(img)
+            img = RandomBrightness(img)
+            img = RandomHue(img)
+            img = RandomSaturation(img)
         else:
             img, boxes = resize(img, boxes, (TRAIN_IMAGE_SIZE, TRAIN_IMAGE_SIZE))
             #img, boxes = center_crop(img, boxes, (TRAIN_IMAGE_SIZE, TRAIN_IMAGE_SIZE))

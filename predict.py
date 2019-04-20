@@ -130,7 +130,11 @@ def model_inport(model_path):
     return model
 
 def format_out(number):
-    return str(int(number))
+    
+    number = int(number)
+    if number < 0 :
+        number = 0
+    return str(number)
 
 def write_predictions_to_file(predicted_results, output_folder):
     pathlib.Path(output_folder).mkdir(parents=True, exist_ok=True)
@@ -170,11 +174,20 @@ def main():
     if os.path.isdir(output_folder):
         shutil.rmtree(output_folder)
     
+    execution(train_folder, output_folder, model_path)
+    
+
+def execution(train_folder, output_folder, model_path):
+
     print("Object detection starting........")
     predicted_results = predict_all(train_folder, model_path, data_size = VALI_DATA_SIZE, num_workers = NUM_WORKERS)
     
     print("Writeing results into folder {}".format(output_folder))
     write_predictions_to_file(predicted_results, output_folder)
+    
+    import hw2_evaluation_task2
+    
+    hw2_evaluation_task2.main()
     
 if __name__ == '__main__':
     main()

@@ -6,6 +6,7 @@ import torchvision.transforms as transforms
 
 from PIL import Image, ImageDraw
 import cv2
+import numpy as np
 
 def resize(img, boxes, size, max_size=1000):
     '''Resize the input PIL image to the given size.
@@ -100,23 +101,88 @@ def center_crop(img, boxes, size):
     boxes[:,1::2].clamp_(min=0, max=oh-1)
     return img, boxes
 
-def random_flip(img, boxes):
-    '''Randomly flip the given PIL Image.
-    Args:
-        img: (PIL Image) image to be flipped.
-        boxes: (tensor) object boxes, sized [#ojb,4].
-    Returns:
-        img: (PIL.Image) randomly flipped image.
-        boxes: (tensor) randomly flipped boxes.
-    '''
+
+def BGR2RGB(img):
+    return cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+
+def random_flip(im, boxes):
+    im_lr = im
     if random.random() < 0.5:
-        img = img.transpose(Image.FLIP_LEFT_RIGHT)
-        w = img.width
+        im_lr = np.fliplr(im).copy()
+        h,w,_ = im.shape
         xmin = w - boxes[:,2]
         xmax = w - boxes[:,0]
         boxes[:,0] = xmin
         boxes[:,2] = xmax
-    return img, boxes
+    return im_lr, boxes
+
+def random_bright(  im, delta=16):
+    alpha = random.random()
+    if alpha > 0.3:
+        im = im * alpha + random.randrange(-delta,delta)
+        im = im.clip(min=0,max=255).astype(np.uint8)
+        return im
+    return im
+
+def randomScale( bgr,boxes):
+    #固定住高度，以0.8-1.2伸缩宽度，做图像形变
+    if random.random() < 0.5:
+        scale = random.uniform(0.8,1.2)
+        height,width,c = bgr.shape
+        bgr = cv2.resize(bgr,(int(width*scale),height))
+        scale_tensor = torch.FloatTensor([[scale,1,scale,1]]).expand_as(boxes)
+        boxes = boxes * scale_tensor
+        return bgr,boxes
+    return bgr,boxes
+
+def randomBlur( bgr):
+    if random.random()<0.5:
+        bgr = cv2.blur(bgr,(5,5))
+    return bgr
+
+def RandomHue( bgr):
+    if random.random() < 0.5:
+        hsv = BGR2HSV(bgr)
+        h,s,v = cv2.split(hsv)
+        adjust = random.choice([0.5,1.5])
+        h = h*adjust
+        h = np.clip(h, 0, 255).astype(hsv.dtype)
+        hsv = cv2.merge((h,s,v))
+        bgr = HSV2BGR(hsv)
+    return bgr
+
+def RandomSaturation( bgr):
+    if random.random() < 0.5:
+        hsv = BGR2HSV(bgr)
+        h,s,v = cv2.split(hsv)
+        adjust = random.choice([0.5,1.5])
+        s = s*adjust
+        s = np.clip(s, 0, 255).astype(hsv.dtype)
+        hsv = cv2.merge((h,s,v))
+        bgr = HSV2BGR(hsv)
+    return bgr
+
+def RandomBrightness( bgr):
+    if random.random() < 0.5:
+        hsv = BGR2HSV(bgr)
+        h,s,v = cv2.split(hsv)
+        adjust = random.choice([0.5,1.5])
+        v = v*adjust
+        v = np.clip(v, 0, 255).astype(hsv.dtype)
+        hsv = cv2.merge((h,s,v))
+        bgr = HSV2BGR(hsv)
+    return bgr
+
+def subMean(bgr,mean):
+    mean = np.array(mean, dtype=np.float32)
+    bgr = bgr - mean
+    return bgr
+
+def BGR2HSV( img):
+    return cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+
+def HSV2BGR( img):
+    return cv2.cvtColor(img,cv2.COLOR_HSV2BGR)
 
 def draw(img, boxes):
     draw = ImageDraw.Draw(img)

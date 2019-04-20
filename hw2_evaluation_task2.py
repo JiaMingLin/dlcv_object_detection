@@ -249,10 +249,18 @@ def main():
     # annopath = r'I:\dota\testset\ReclabelTxt-utf-8\{:s}.txt'
     # imagesetfile = r'I:\dota\testset\va.txt'
 
-    detpath = os.path.join(sys.argv[1], '{:s}.txt')
-    annopath = os.path.join(sys.argv[2], '{:s}.txt')
-    imagenames = [x.split('.')[0] for x in os.listdir(sys.argv[2]) if x.endswith('.txt')]
-
+    #detpath = os.path.join(sys.argv[1], '{:s}.txt')
+    #annopath = os.path.join(sys.argv[2], '{:s}.txt')
+    
+    det_folder = "./Test_hbb"
+    anno_folder = "./hw2_train_val/val1500/labelTxt_hbb"
+    detpath = os.path.join(det_folder, '{:s}.txt')
+    annopath = os.path.join(anno_folder, '{:s}.txt')
+    
+    #detpath = os.path.join(sys.argv[1], '{:s}.txt')
+    #annopath = os.path.join(sys.argv[2], '{:s}.txt')
+    #imagenames = [x.split('.')[0] for x in os.listdir(sys.argv[2]) if x.endswith('.txt')]
+    imagenames = [x.split('.')[0] for x in os.listdir(anno_folder) if x.endswith('.txt')]
     '''
     # read list of images
     imagesetfile = sys.argv[3]

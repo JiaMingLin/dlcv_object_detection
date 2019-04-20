@@ -8,7 +8,7 @@ NUM_WORKERS = 2
 
 VALI_DATA_SIZE = 1500
 TRAIN_DATA_SIZE = 15000
-EPOCH_NUM = 40
+EPOCH_NUM = 3
 
 LEARNING_RATE = 0.0001
 
@@ -20,7 +20,8 @@ use_gpu = torch.cuda.is_available()
 MODELS = {
     'vgg16_test_3': './models/model_test_3/models/best.pth',
     'vgg16_test_4': './models/model_test_4_bug_fix/models/best.pth',
-    'vgg16_test_5': './models/model_test_4_bug_fix/models/stage_30_model.pth'
+    'vgg16_test_5': './models/model_test_4_bug_fix/models/stage_30_model.pth',
+    'vgg16_test_6': './models/model_test_5_fix_loss/models/best.pth'
 }
 
 

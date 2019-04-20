@@ -18,6 +18,7 @@ from models import Yolov1_vgg16bn
 from warmup_scheduler import GradualWarmupScheduler
 
 from constant import *
+from predict import execution
 
 use_gpu = torch.cuda.is_available()
 
@@ -61,6 +62,7 @@ def save_model_by_epoch(epoch, model):
 def save_torch_model(model, model_name):
     path = os.path.join(model_path, model_name)
     torch.save(model.state_dict(), path)
+    return path
 
 def main():
     best_test_loss = np.inf
@@ -162,12 +164,19 @@ def main():
         train_val_loss_log.flush()
         if best_test_loss > validation_loss:
             best_test_loss = validation_loss
-            save_torch_model(model, 'best.pth')
+            best_model_path = save_torch_model(model, 'best.pth')
             event_str = 'epoch: {}, update best model \n'.format(epoch)
             print(event_str)
             event_log.writelines(event_str)
             event_log.flush()
+            execution(validate_folder, './Test_hbb', best_model_path)
 
+        ## =============================
+        #   Evaluate mAP
+        ## =============================
+        
+        
+        
         
     train_val_loss_log.close()
     event_log.close()
