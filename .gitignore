@@ -1,3 +1,8 @@
+results/*
+models/*
+hw2_train_val/*
+Test_hbb/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
