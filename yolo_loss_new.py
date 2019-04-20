@@ -107,7 +107,7 @@ class YoloLossNew(nn.Module):
             max_iou, max_idx = iou.max(0) # max_idx = 0 or 1
             
             resp_box_mask[ i+max_idx, :] = 1
-            no_resp_box_mask[i+max_idx-1, :] = 1
+            no_resp_box_mask[i+1-max_idx, :] = 1
             resp_box_iou[i+max_idx] = float(max_iou)   # sized [2M, 1]
         
         resp_pred_boxes = conobj_pred_boxes[resp_box_mask].view(-1, 5) # sized [N, 5]
@@ -126,19 +126,20 @@ class YoloLossNew(nn.Module):
         # resp_box_iou sized [2M, 1], while resp_box_mask sized [2M, 5]
         resp_box_iou = resp_box_iou.view(-1,1).expand_as(resp_box_mask)    # sized [2M, 5]
         resp_box_iou = resp_box_iou[resp_box_mask].view(-1,5)   # sized [N, 5]
-        conf_loss = F.mse_loss(resp_pred_boxes_conf, resp_box_iou[:, 0], reduction = 'sum')
+        conf_loss = F.mse_loss(resp_pred_boxes_conf, resp_box_iou[:, 4], reduction = 'sum')
         
         # contain object but not responsible loss
         no_resp_pred_boxes_conf = conobj_pred_boxes[no_resp_box_mask].view(-1,5)   # sized [K,5]
         no_resp_target_boxes_conf = conobj_target_boxes[no_resp_box_mask].view(-1,5)  # sized [K,5]
         no_resp_target_boxes_conf[:, 4] = 0
         conobj_no_resp_loss = F.mse_loss(no_resp_pred_boxes_conf[:,4], no_resp_target_boxes_conf[:,4], reduction = 'sum')
-        
+
         # no object boxes confidence loss
-        noobj_pred_conf = noobj_pred[:,4]  # sized [N, 1]
-        noobj_target_conf = noobj_target[:,4]   # sized [N, 1]
+        noobj_pred_bbox = noobj_pred[:, :10].contiguous().view(-1,5)   # sized [N, 5]  [cx cy w h conf]
+        noobj_pred_conf = noobj_pred_bbox[:,4]  # sized [N, 1]
+        noobj_target_conf = torch.zeros(noobj_pred_conf.size()).cuda() # sized [N, 1]
         noobj_loss = F.mse_loss(noobj_pred_conf, noobj_target_conf, reduction = 'sum')
-        
+
         # class loss
         conobj_pred_cls = conobj_pred[:, 10:]  # sized [M, 16]
         conobj_target_cls = conobj_target[:, 10:]  # sized [M, 16]
@@ -185,7 +186,7 @@ def test1_cls_loss():
         ]
     ])
 
-    w = torch.cat( (x.unsqueeze(0), y.unsqueeze(0), z.unsqueeze(0)), 0)
+    w = torch.cat( (x.unsqueeze(0), y.unsqueeze(0), z.unsqueeze(0)), 0).cuda()
     
     loss.forward(w,w)
     
@@ -210,5 +211,5 @@ def test2_random_vector():
     
 
 if __name__ == '__main__':
-    test2_random_vector()
+    test1_cls_loss()
     

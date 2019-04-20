@@ -17,6 +17,8 @@ from yolo_loss_new import YoloLossNew
 from models import Yolov1_vgg16bn
 from warmup_scheduler import GradualWarmupScheduler
 
+from constant import *
+
 use_gpu = torch.cuda.is_available()
 
 img_folder = 'hw2_train_val/train15000/'
@@ -39,10 +41,10 @@ if os.path.isdir(model_path) != True:
     os.mkdir(model_path)
 
 stages = dict([(10, 0.0015), (20, 0.001), (30, 0.0005), (40, 0.0001), (50, 0.00001)])
-train_num = 2000
+train_num = TRAIN_DATA_SIZE
 test_num = 1500
 img_size = 448
-num_epochs = 2
+num_epochs = EPOCH_NUM
 lambda_coord = 5
 lambda_noobj = .5
 n_batch = 24
