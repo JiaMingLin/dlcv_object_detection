@@ -26,14 +26,13 @@ img_folder = 'hw2_train_val/train15000/'
 validate_folder = 'hw2_train_val/val1500/'
 loss_name = 'test_loss.h5'
 model_name = 'test_model.pth'
-current_run_folder = 'model_test_4_bug_fix'
 
 try:
     os.mkdir('results')
 except:
     pass
 
-results_folder = 'results/{}'.format(current_run_folder)
+results_folder = 'results/{}'.format(SAVE_FOLDER)
 if os.path.isdir(results_folder) != True:
     os.mkdir(results_folder)
 

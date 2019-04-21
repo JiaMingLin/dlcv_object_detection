@@ -16,6 +16,7 @@ import os
 #import cPickle
 import numpy as np
 #import matplotlib.pyplot as plt
+from constant import *
 
 def parse_gt(filename):
     objects = []
@@ -308,6 +309,18 @@ def main():
         # plt.show()
     map1 = map1/len(classnames)
     print('map:', map1)
+    
+    ## ========================================
+    #   Save AP for each class to file
+    ## ========================================
+    results_folder = 'results/{}'.format(SAVE_FOLDER)
+    with open(os.path.join(results_folder, 'precision_log'), 'a+') as f:
+        ap_class = ["{}:{:.2f}".format(x,y) for (x, y) in zip(classnames,classaps)]
+        log_str = ', '.join(ap_class)
+        log_str += (', mAP: {:.2f}'.format(map1))
+        log_str += '\n'
+        f.write(log_str)
+    
     return map1
     #classaps = 100*np.array(classaps)
     #print('classaps: ', classaps)
