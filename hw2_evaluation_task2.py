@@ -245,7 +245,7 @@ def readdet(detpath, imagenames, classnames):
             # [image_name, conf, xmin, ymin, xmax, ymax]
     return output_det
 
-def main():
+def main(det_folder, anno_folder, write_file = True):
     # detpath = r'E:\documentation\OneDrive\documentation\DotaEvaluation\evluation_task2\evluation_task2\faster-rcnn-nms_0.3_task2\nms_0.3_task\Task2_{:s}.txt'
     # annopath = r'I:\dota\testset\ReclabelTxt-utf-8\{:s}.txt'
     # imagesetfile = r'I:\dota\testset\va.txt'
@@ -253,8 +253,8 @@ def main():
     #detpath = os.path.join(sys.argv[1], '{:s}.txt')
     #annopath = os.path.join(sys.argv[2], '{:s}.txt')
     
-    det_folder = "./Test_hbb"
-    anno_folder = "./hw2_train_val/val1500/labelTxt_hbb"
+    #det_folder = "./Test_hbb"
+    #anno_folder = "./hw2_train_val/val1500/labelTxt_hbb"
     detpath = os.path.join(det_folder, '{:s}.txt')
     annopath = os.path.join(anno_folder, '{:s}.txt')
     
@@ -289,7 +289,7 @@ def main():
     classaps = []
     map1 = 0
     for classname in classnames:
-        print('classname:', classname)
+        #print('classname:', classname)
         rec, prec, ap = voc_eval(det[classname],
              annopath,
              imagenames,
@@ -298,7 +298,7 @@ def main():
              use_07_metric=True)
         map1 = map1 + ap
         #print('rec: ', rec, 'prec: ', prec, 'ap: ', ap)
-        print('ap: ', ap)
+        #print('ap: ', ap)
         classaps.append(ap)
 
         ## uncomment to plot p-r curve for each category
@@ -313,16 +313,16 @@ def main():
     ## ========================================
     #   Save AP for each class to file
     ## ========================================
-    results_folder = 'results/{}'.format(SAVE_FOLDER)
-    with open(os.path.join(results_folder, 'precision_log'), 'a+') as f:
-        ap_class = ["{}:{:.2f}".format(x,y) for (x, y) in zip(classnames,classaps)]
-        log_str = ', '.join(ap_class)
-        log_str += (', mAP: {:.2f}'.format(map1))
-        log_str += '\n'
-        f.write(log_str)
+    if write is true:        
+        results_folder = 'results/{}'.format(SAVE_FOLDER)
+        with open(os.path.join(results_folder, 'precision_log'), 'a+') as f:
+            ap_class = ["{}:{:.2f}".format(x,y) for (x, y) in zip(classnames,classaps)]
+            log_str = ', '.join(ap_class)
+            log_str += (', mAP: {:.2f}'.format(map1))
+            log_str += '\n'
+            f.write(log_str)
     
-    return map1
-    #classaps = 100*np.array(classaps)
-    #print('classaps: ', classaps)
+    return map1, classaps
+
 if __name__ == '__main__':
-    main()
+    main(None, None, write_file = False)

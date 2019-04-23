@@ -11,6 +11,7 @@ validation_image_path = 'hw2_train_val/val1500/images/'
 validation_target_path = 'hw2_train_val/val1500/labelTxt_hbb/'
 
 
+
 class DataGenerator(data.Dataset):
     def __init__(self, parent_dir, img_size, S, B, C, transform, num = 15000, train = True):
         self.parent_dir = parent_dir
@@ -26,6 +27,15 @@ class DataGenerator(data.Dataset):
         self.imgs = []
         self.targets = [] # xmin, ymin, xmax, ymax, class_num
         self.mean = (123,117,104)#RGB
+        
+        self.class_counting = {
+            'plane':0, 'ship':0, 'storage-tank':0, 'baseball-diamond':0,
+            'tennis-court':0, 'basketball-court':0, 'ground-track-field':0,
+            'harbor':0, 'bridge':0, 'small-vehicle':0, 'large-vehicle':0,
+            'helicopter':0, 'roundabout':0, 'soccer-ball-field':0,
+            'swimming-pool':0, 'container-crane':0
+        }
+        
         
         # loading training data
         image_path = os.path.join(parent_dir, "images")
@@ -75,6 +85,8 @@ class DataGenerator(data.Dataset):
                 xmax = float(splited[4])
                 ymax = float(splited[5])
                 cls_num = DOTA_CLASSES.index(splited[8])
+                #print("{}: {}".format(splited[8], cls_num))
+                self.class_counting[splited[8]] += 1
                 target_per_img.append([xmin, ymin, xmax, ymax, cls_num])                
            
         return torch.Tensor(target_per_img)
@@ -93,7 +105,7 @@ class DataGenerator(data.Dataset):
         img = self.imgs[index]
         
         img = adaptiveHE(img)
-        img = sharpening(img)
+        #img = sharpening(img)
         
         # boxes and labels
         raw_target = self.targets[index].clone()  # [xmin, ymin, xmax, ymax, cls_num]
@@ -103,8 +115,6 @@ class DataGenerator(data.Dataset):
         except:
             boxes = torch.zeros(1, 4)
             labels = torch.zeros(1)
-
-        img = adaptiveHE(img)        
         #
         # data augmentation
         

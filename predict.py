@@ -7,13 +7,22 @@ from constant import *
 
 import shutil
 
+class_counting = {
+    'plane':0, 'ship':0, 'storage-tank':0, 'baseball-diamond':0,
+    'tennis-court':0, 'basketball-court':0, 'ground-track-field':0,
+    'harbor':0, 'bridge':0, 'small-vehicle':0, 'large-vehicle':0,
+    'helicopter':0, 'roundabout':0, 'soccer-ball-field':0,
+    'swimming-pool':0, 'container-crane':0
+}
+
+
 def predict(img, model, DEBUG = False, dummy_example = None):
     """
         input: 
             1. image (tensor) sized: [3, 448, 448]
             2. model
             3. DEBUG (boolean)
-            4. dummy_example (tensor) sized [3, 448, 448]
+            4. dummy_example (tensor) sized [7,7,26]
         output:
             1. pred_bbox_cxcy (tensor), sized [98, 4], [cx,cy,w,h]
             2. pred_class_conf (tensor), sized [98, 1], max class prob * IoU confidence
@@ -49,7 +58,7 @@ def predict(img, model, DEBUG = False, dummy_example = None):
     return pred_bbox_cxcy, pred_cls_conf, pred_max_cls_code
 
 
-def predict_all(input_path, model_path, data_size = 1500, num_workers = 2):
+def predict_all(input_path, model_path, data_size = 1500, num_workers = 2, conf_thres = 0.1, nms_thres = 0.5):
     
     ## ==========================
     #  Data
@@ -81,7 +90,8 @@ def predict_all(input_path, model_path, data_size = 1500, num_workers = 2):
     for image_id in range(data_counts):
         img_name, images , target = validation_dataset.__getitem__(image_id)
         #print("Detecting objects in image: {}....".format(img_name))
-        pred_bbox_cxcy, cls_conf, max_cls_code = predict(images, model)
+        #pred_bbox_cxcy, cls_conf, max_cls_code = predict(images, model)
+        pred_bbox_cxcy, cls_conf, max_cls_code = predict(images, model, DEBUG = False, dummy_example = target)
         pred_bbox_xy = pred_bbox_revert(pred_bbox_cxcy)
         
         prediction_results.append(
@@ -100,11 +110,14 @@ def predict_all(input_path, model_path, data_size = 1500, num_workers = 2):
     for image_name, pred_bbox_xy, cls_conf, max_cls_code in prediction_results:
         
         bbox_xy_final,cls_conf_final,pred_cls_code_final = bbox_filtering(pred_bbox_xy, cls_conf, max_cls_code
-                                                                         ,nms_thresh = NMS_THRESH, hconf_thresh = HCONF_THRESH)
+                                                                         ,nms_thresh = nms_thres, hconf_thresh = conf_thres)
         
         # class names
         #max_cls_idx = torch.max(pred_cls_final, 1)[1].tolist() if pred_cls_final.size(0) != 0 else []
         cls_labels = [DOTA_CLASSES[idx] for idx in pred_cls_code_final.squeeze(1).tolist()]
+        
+        for label in cls_labels:
+            class_counting[label] += 1
         
         filtered_results.append(
             (
@@ -150,22 +163,30 @@ def write_predictions_to_file(predicted_results, output_folder):
                 box_write = [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax]
                 write_str = ' '.join(box_write)
                 write_str += (' ' + label)
+                print(cls_conf)
                 write_str += (' ' + str(cls_conf))
                 write_str += '\n'
                 f.write(write_str)
+    
+    #return output_folder
 
 def main():
     
-    parser = argparse.ArgumentParser()
-    parser.add_argument("input_img_folder", help="The input image folder")
-    parser.add_argument("output_pred_folder", help="The output prediction folder")
-    parser.add_argument("model", help="The name of backbone model")
-    args = parser.parse_args()
+    #parser = argparse.ArgumentParser()
+    #parser.add_argument("input_img_folder", help="The input image folder")
+    #parser.add_argument("output_pred_folder", help="The output prediction folder")
+    #parser.add_argument("model", help="The name of backbone model")
+    #args = parser.parse_args()
     
     # inputs
-    train_folder = args.input_img_folder
-    output_folder = args.output_pred_folder
-    model_path = MODELS[args.model]
+    #train_folder = args.input_img_folder
+    #output_folder = args.output_pred_folder
+    #model_path = MODELS[args.model]
+
+    train_folder = './hw2_train_val/val1500/'
+    output_folder = './Text_hbb'
+    model_path = './models/best_encurage_detection.pth'
+    
     
     print("Traing set folder: {}".format(train_folder))
     print("Results output folder: {}".format(output_folder))
@@ -177,17 +198,22 @@ def main():
     execution(train_folder, output_folder, model_path)
     
 
-def execution(train_folder, output_folder, model_path):
+def execution(image_folder, output_folder, model_path, conf_thres = 0.1, nms_thres = 0.5):
 
     print("Object detection starting........")
-    predicted_results = predict_all(train_folder, model_path, data_size = VALI_DATA_SIZE, num_workers = NUM_WORKERS)
+    predicted_results = predict_all(image_folder, model_path, 
+                                    data_size = VALI_DATA_SIZE, num_workers = NUM_WORKERS,
+                                    conf_thres = conf_thres, nms_thres = nms_thres
+                                   )
     
     print("Writeing results into folder {}".format(output_folder))
     write_predictions_to_file(predicted_results, output_folder)
     
     import hw2_evaluation_task2
     
-    map1 = hw2_evaluation_task2.main()
+    # main(det_folder, anno_folder):
+    anno_folder = "./hw2_train_val/val1500/labelTxt_hbb"
+    map1, _ = hw2_evaluation_task2.main(output_folder, anno_folder)
     
     return map1
 

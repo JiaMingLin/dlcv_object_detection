@@ -43,7 +43,7 @@ def pred_bbox_revert(pred_bbox_cxcy):
 
     return pred_bbox_xy
 
-def bbox_filtering(bbox_xy, bbox_cls_conf, bbox_cls_code, nms_thresh = 0.5, hconf_thresh = 0.6):
+def bbox_filtering(bbox_xy, bbox_cls_conf, bbox_cls_code, nms_thresh = 0.5, hconf_thresh = 0.1):
     """
         inputs:
             1. bbox_xy (tensor): sized [M, 4], [xmin, ymin, xmax, ymax]
@@ -58,7 +58,6 @@ def bbox_filtering(bbox_xy, bbox_cls_conf, bbox_cls_code, nms_thresh = 0.5, hcon
     #  filtering by confidence
     ## =============================
     hconf_pass = (bbox_cls_conf > hconf_thresh)  # sized [98, 1] 0 or 1
-
     # high confidence bbox
     hconf_bbox_xy_pass = hconf_pass.expand_as(bbox_xy)  # sized [98 , 4]
     hconf_bbox_xy = bbox_xy[hconf_bbox_xy_pass].view(-1, 4)  # sized [M, 4]
@@ -84,6 +83,8 @@ def bbox_filtering(bbox_xy, bbox_cls_conf, bbox_cls_code, nms_thresh = 0.5, hcon
 
     # final class probability
     pred_cls_final = hconf_max_cls_code[nms_pass].squeeze(1)
+    
+    #print(bbox_xy_final.size(), cls_conf_final.size(), pred_cls_final.size())
     
     return bbox_xy_final, cls_conf_final, pred_cls_final
     
@@ -132,7 +133,6 @@ def nms(bboxes, scores, threshold=0.5, mode='union'):
             ovr = inter / areas[order[1:]].clamp(max=areas[i])
         else:
             raise TypeError('Unknown nms mode: %s.' % mode)
-
         ids = (ovr<=threshold).nonzero().squeeze()
         if ids.numel() == 0:
             break
