@@ -174,7 +174,6 @@ def main():
             save_torch_model(model, 'best.pth', epoch)
 
     train_val_loss_log.close()
-    event_log.close()
 
 if __name__ == '__main__':
     main()
